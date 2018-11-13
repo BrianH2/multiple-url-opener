@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Open URLs</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://unpkg.com/tachyons@4.10.0/css/tachyons.min.css"/>
+</head>
+<body class="avenir dark-gray">
+  <div class="mw7 center mt5 mb3">
+    <h1 class="f2 fw4">Multiple URL Opener</h1>
+
+    <p class="lh-copy">
+      A simple tool to open multiple URLs in your browser. Tested with and built for Chrome 69. Check out the source code on Github <a href="" class="link dim blue">here</a>. Note, while working each new tab opened will refocus your browser window to it.
+    </p>
+
+    <p class="lh-copy">
+      Paste your URLs, one per line:
+    </p>
+
+    <textarea
+      class="db w-100 lh-copy pa2"
+      rows="5"
+      id="urls"
+      onkeyup="countURLs()"
+    ></textarea>
+
+    <div class="db mt3 flex align-center">
+      <label for="time-between" class="w-50 lh-copy">
+        Delay (in seconds) between opening each URL:
+      </label>
+
+      <input
+        class="ph2 lh-copy tc v-mid"
+        id="time-between"
+        type="number"
+        value="6"
+        step="1"
+        min="0"
+        max="20"
+        placeholder="6"
+      >
+    </div>
+
+    <div class="db mt3 flex align-center">
+      <label for="time-close" class="w-50 lh-copy">
+        Delay (in seconds) before closing each tab:
+      </label>
+
+      <input
+        class="ph2 lh-copy tc v-mid"
+        id="time-close"
+        type="number"
+        value="6"
+        step="1"
+        min="0"
+        max="20"
+        placeholder="6"
+      >
+    </div>
+
+    <p id="status-container" class="lh-copy bg-washed-green bg-washed-yellow pv2 ph3 ba b--light-gray">
+      <span class="fw5">Status:</span>
+      <span id="status">
+        Not started
+      </span>
+    </p>
+
+    <a
+      class="dib mt3 pv3 ph4 f5 bg-blue white dim link pointer br2"
+      href="javascript:openURLs();"
+      id="open-urls"
+    >
+      Open URLs
+    </a>
+  </div>
+
+  <script type="text/javascript">
+    var urlInput = document.querySelector('textarea');
+    var statusContainer = document.querySelector('#status-container');
+    var statusAlert = document.querySelector('#status');
+
+    function countURLs () {
+      var urls = urlInput.value.split('\n');
+
+      statusAlert.innerHTML = 'Not started (' + urls.length + ' URLs entered)';
+    }
+
+    function openURLs () {
+      var urls = urlInput.value.split('\n');
+      var timeBetween = document.querySelector('#time-between').value;
+      var timeBeforeClose = document.querySelector('#time-close').value;
+
+      if (urls.length <= 1 || urls[0] == '') {
+        window.alert('No URLs found - please add at least one');
+        return false;
+      }
+
+      if (timeBetween < 2 && urls.length > 15) {
+        var check = confirm('Please note that opening many windows at once may cause your browser to freeze/crash. We recommend adding a delay between opening each tab.\n\nPress cancel to return and add a delay, or OK to continue');
+
+        if (!check) { return false; }
+      }
+
+      var tabs = {};
+
+      var url = urls[urls.length - 1];
+
+      statusAlert.innerHTML = 'Processing 1 of ' + urls.length;
+
+      if (url) {
+        tabs[urls.length - 1] = window.open(url,'_blank');
+
+        setTimeout(function () {
+          tabs[urls.length - 1].close();
+        }, timeBeforeClose * 1000);
+      }
+
+      (function processURL (i) {
+        setTimeout(function () {
+          i--;
+
+          var url = urls[i].trim();
+          var currentCount = urls.length - i;
+          statusAlert.innerHTML = 'Processing ' + currentCount + ' of ' + urls.length;
+
+          if (url) {
+            tabs[i] = window.open(url,'_blank');
+
+            setTimeout(function () {
+              tabs[i].close();
+            }, timeBeforeClose * 1000);
+          }
+
+          if (i > 0) {
+            processURL(i);
+          } else {
+            statusAlert.innerHTML = 'Finished opening ' + urls.length + ' URLs.';
+          }
+        }, timeBetween * 1000);
+      })(urls.length - 1);
+    }
+  </script>
+</body>
+</html>
